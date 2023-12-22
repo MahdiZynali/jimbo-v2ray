@@ -2,6 +2,7 @@ import socket
 import time
 import requests
 from termcolor import colored, cprint
+import multiprocessing
 
 class scanner:
     '''test aliveness, upload speed, download speed'''
@@ -18,6 +19,9 @@ class scanner:
     def generate_ip(self):
         for ip in range(self.epoch):
             self.ip_address.append(self.rangeIP + str(ip))
+            
+        self.ip_address = [self.ip_address[i:i + self.num_processes] for i in
+                        range(0, len(self.ip_address), self.num_processes)]
 
     def ip_scanner(self, ip) -> bool:
         ''' check whether an IP is alive or not '''
@@ -80,21 +84,32 @@ class scanner:
             cprint(f"Download speed: None", "blue")
             return False
 
-    def handler(self, ip_address) -> None:
+    def handler(self, group) -> None:
         ''' pass elements into processor functions and printout results'''
-        print("Ip : ", ip_address)
-        if self.ip_scanner(ip_address):
-            up_speed = self.upload_speed(ip_address)
-            down_speed = self.download_speed(1000000, timeout=2, ips=ip_address)
-            if up_speed is not False and down_speed is not False:
-                cprint("status : Alive", "green")
+        
+        for ip_address in group :
+            print("Ip : ", ip_address)
+            if self.ip_scanner(ip_address):
+                up_speed = self.upload_speed(ip_address)
+                down_speed = self.download_speed(1000000, timeout=2, ips=ip_address)
+                if up_speed is not False and down_speed is not False:
+                    cprint("status : Alive", "green")
+                else:
+                    cprint("Status : down", 'red')
+                print("=" * 40)
             else:
                 cprint("Status : down", 'red')
-            print("=" * 40)
-        else:
-            cprint("Status : down", 'red')
-            print("=" * 40)
+                print("=" * 40)
 
     def scan_ips(self):
-        for ip_address in self.ip_address:
-            self.handler(ip_address)
+        processes = []
+        for group in self.ip_address:
+            for i in range (self.num_processes):
+                process = multiprocessing.Process(target=self.handler, args=(group,))
+                processes.append(process)
+                
+            # process.start()
+
+        print(processes)
+        # for process in processes:
+        #     process.join()
