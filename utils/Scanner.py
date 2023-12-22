@@ -34,10 +34,6 @@ class scanner:
 
     def upload_speed(self, ip) -> None:
         ''' send packet into ip ip address to check upload speed time '''
-        session_up = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # socket.setdefaulttimeout(1)
-        session_up.settimeout(1)
-        packet = b"a" * 100000  # 0.1 MB of data
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as session_up:
                 session_up.settimeout(1)
